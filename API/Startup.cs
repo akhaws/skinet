@@ -13,9 +13,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Core.Interfaces;
-using AutoMapper;
 using API.Helpers;
+using API.Middleware;
+using API.Extensions;
 
 namespace API
 {
@@ -34,26 +34,34 @@ namespace API
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddScoped(typeof(IGenericRepository<>), (typeof(GenericRepository<>)));
-            services.AddScoped<IProductRepository, ProductRepository>();
             services.AddAutoMapper(typeof(MappingProfiles));
             services.AddControllers();
             services.AddDbContext<StoreContext>(x => x.UseSqlite(_config.GetConnectionString("DefaultConnection")));
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebAPIv5", Version = "v1" });
-            });
+            services.AddApplicationServices();  //Added to Customized to Clean up of Startup File
+            services.AddSwaggerDocumentation(); //Added to Customized to Clean up of Startup File
+
+
         }
+
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+
+            //Added Our Own Custom Error Handling  Order Is Important
+            app.UseMiddleware<ExceptionMiddleware>();
+
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebAPIv5 v1"));
+                //app.UseDeveloperExceptionPage();  //Disabled because we use our Own
+                //app.UseSwagger();
+                //app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebAPIv5 v1"));
             }
+
+            app.UseSwaggerDocumentation();   //Added to Customized to Clean up of Startup File
+
+            //Added redirect errors to /errors and status code
+            app.UseStatusCodePagesWithReExecute("/errors/{0}");
 
             app.UseHttpsRedirection();
 
