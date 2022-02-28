@@ -14,6 +14,8 @@ using Microsoft.OpenApi.Models;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Core.Interfaces;
+using AutoMapper;
+using API.Helpers;
 
 namespace API
 {
@@ -32,7 +34,9 @@ namespace API
         public void ConfigureServices(IServiceCollection services)
         {
 
+            services.AddScoped(typeof(IGenericRepository<>), (typeof(GenericRepository<>)));
             services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddAutoMapper(typeof(MappingProfiles));
             services.AddControllers();
             services.AddDbContext<StoreContext>(x => x.UseSqlite(_config.GetConnectionString("DefaultConnection")));
             services.AddSwaggerGen(c =>
@@ -54,6 +58,8 @@ namespace API
             app.UseHttpsRedirection();
 
             app.UseRouting();
+            //Order Is important
+            app.UseStaticFiles();
 
             app.UseAuthorization();
 
