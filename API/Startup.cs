@@ -39,8 +39,14 @@ namespace API
             services.AddDbContext<StoreContext>(x => x.UseSqlite(_config.GetConnectionString("DefaultConnection")));
             services.AddApplicationServices();  //Added to Customized to Clean up of Startup File
             services.AddSwaggerDocumentation(); //Added to Customized to Clean up of Startup File
-
-
+            //Added Cors to allow Browser Javascripting Access
+            services.AddCors(opt =>
+            {
+                opt.AddPolicy("CorsPolicy", policy => 
+                {
+                    policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200");
+                });
+            });
         }
 
 
@@ -68,6 +74,9 @@ namespace API
             app.UseRouting();
             //Order Is important
             app.UseStaticFiles();
+
+            //Added To Use Cors
+            app.UseCors("CorsPolicy");
 
             app.UseAuthorization();
 
